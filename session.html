@@ -1,27 +1,223 @@
 <!DOCTYPE html>
+
 <html lang="es">
+
 <head>
+
   <meta charset="UTF-8">
+
   <title>Sesión del Grupo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    body {
-      background: #101010;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
+
+    body { background: #101010; color: #fff; font-family: Arial, sans-serif; text-align: center; }
+
+    .timer { font-size: 2em; margin: 18px 0; color: #00eaff; }
+
+    .formulario { margin: 20px auto; max-width: 320px; }
+
+    .input { padding: 8px; margin: 6px 0; width: 90%; border-radius: 8px; border: none; }
+
+    .btn { background: #00eaff; color: #101010; font-weight: bold; border: none; border-radius: 8px; padding: 10px 24px; cursor: pointer; margin-top: 10px; }
+
+    .btn:hover { background: #ff0055; color: #fff; }
+
+    .success { color: #00ff99; margin-top: 10px; }
+
+    .counter { margin: 10px 0; color: #ffea00; }
+
+    .link { color: #00eaff; word-break: break-all; }
+
+    .msg-info { color: #ffea00; margin-bottom: 10px; font-size: 1.05em; }
+
+  </style>
+
+</head>
+
+<body>
+
+  <!-- Musique automatique -->
+
+  <audio id="audio2" src="https://files.catbox.moe/3sitln.mp3" autoplay></audio>
+
+  <audio id="audio3" src="https://files.catbox.moe/q702ow.m4a"></audio>
+
+
+
+  <h1 id="groupTitle"></h1>
+
+  <div class="timer" id="timer"></div>
+
+  <div class="counter">Participantes: <span id="count">0</span></div>
+
+  <div class="link" id="link"></div>
+
+  <div class="msg-info">Por favor, introduce tu número con el código de país (ejemplo: +509...)</div>
+
+  <div class="formulario">
+
+    <input class="input" id="nombre" type="text" placeholder="Tu nombre"><br>
+
+    <input class="input" id="numero" type="tel" placeholder="Tu número con código de país"><br>
+
+    <button class="btn" onclick="agregar()">Registrar</button>
+
+    <div class="success" id="msg"></div>
+
+  </div>
+
+  <div id="descargar" style="display:none;">
+
+    <a class="btn" href="#" id="vcfLink" download="grupo.vcf">Descargar archivo VCF</a>
+
+  </div>
+
+  <script>
+
+    // Musique enchaînée
+
+    const audio2 = document.getElementById('audio2');
+
+    const audio3 = document.getElementById('audio3');
+
+    audio2.addEventListener('ended', () => {
+
+      audio3.play();
+
+    });
+
+
+
+    // Récupérer les paramètres
+
+    const params = new URLSearchParams(window.location.search);
+
+    const group = decodeURIComponent(params.get("groupe") || "");
+
+    const duracion = parseInt(params.get("duree") || "0");
+
+    const id = params.get("id") || "";
+
+    document.getElementById("groupTitle").textContent = "Grupo: " + group;
+
+    document.getElementById("link").textContent = window.location.href;
+
+
+
+    // Chronomètre
+
+    let tiempoRestante = duracion;
+
+    function updateTimer() {
+
+      let min = Math.floor(tiempoRestante / 60);
+
+      let seg = tiempoRestante % 60;
+
+      document.getElementById("timer").textContent = 
+
+        "Tiempo restante: " + min + "m " + seg + "s";
+
+      if (tiempoRestante > 0) {
+
+        tiempoRestante--;
+
+        setTimeout(updateTimer, 1000);
+
+      } else {
+
+        document.getElementById("descargar").style.display = "block";
+
+        document.getElementById("timer").textContent = "¡Tiempo terminado!";
+
+        generarVCF();
+
+      }
+
     }
-    .timer {
-      font-size: 2.5em;
-      margin: 28px 0 18px 0;
-      color: #00eaff;
-      font-weight: bold;
+
+    if (duracion > 0) updateTimer();
+
+
+
+    // Stockage local pour les participants
+
+    let participantes = JSON.parse(localStorage.getItem("vcf_" + id) || "[]");
+
+    function actualizarContador() {
+
+      document.getElementById("count").textContent = participantes.length;
+
     }
-    .formulario {
-      margin: 30px auto;
-      max-width: 400px;
+
+    actualizarContador();
+
+
+
+    function agregar() {
+
+      const nombre = document.getElementById("nombre").value.trim();
+
+      const numero = document.getElementById("numero").value.trim();
+
+      if (!nombre || !numero) {
+
+        document.getElementById("msg").textContent = "Completa todos los campos.";
+
+        return;
+
+      }
+
+      if (!numero.match(/^\+\d{6,}$/)) {
+
+        document.getElementById("msg").textContent = "Introduce un número válido con el código de país.";
+
+        return;
+
+      }
+
+      if (participantes.some(p => p.numero === numero)) {
+
+        document.getElementById("msg").textContent = "Este número ya está registrado.";
+
+        return;
+
+      }
+
+      participantes.push({nombre, numero});
+
+      localStorage.setItem("vcf_" + id, JSON.stringify(participantes));
+
+      document.getElementById("msg").textContent = "¡Tu número ha sido registrado con éxito!";
+
+      actualizarContador();
+
     }
-    .input {
-      padding: 16px;
-      margin: 12px
+
+
+
+    // Générer le fichier VCF
+
+    function generarVCF() {
+
+      let vcf = "";
+
+      participantes.forEach(p => {
+
+        vcf += `BEGIN:VCARD\nVERSION:3.0\nFN:${p.nombre}\nTEL;TYPE=CELL:${p.numero}\nEND:VCARD\n`;
+
+      });
+
+      const blob = new Blob([vcf], {type: "text/vcard"});
+
+      const url = URL.createObjectURL(blob);
+
+      document.getElementById("vcfLink").href = url;
+
+    }
+
+  </script>
+
+</body>
+
+  </html>
