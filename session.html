@@ -1,247 +1,158 @@
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
-
   <meta charset="UTF-8">
-
   <title>Sesión del Grupo</title>
-
   <style>
-
-    body { background: #101010; color: #fff; font-family: Arial, sans-serif; text-align: center; }
-
-    .timer { font-size: 6em; margin: 20px 2; color: #00eaff; }
-
-    .formulario {
-  margin: 40px auto;
-  max-width: 90%;
-  padding: 40px;
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    html {
+      font-size: 18px;
     }
-
+    @media (max-width: 600px) {
+      html { font-size: 16px; }
+      .timer { font-size: 1.7em; }
+      .group-title { font-size: 1.3em; }
+      .input { font-size: 1.18em; padding: 22px; }
+      .btn { font-size: 1.1em; padding: 14px 28px; }
+      .info { font-size: 1.05em; }
+      .formulario { max-width: 99vw; }
+    }
+    @media (max-width: 400px) {
+      html { font-size: 14px; }
+      .timer { font-size: 1.2em; }
+      .group-title { font-size: 1em; }
+      .formulario { max-width: 100vw; }
+    }
+    body { background: #101010; color: #fff; font-family: Arial, sans-serif; text-align: center; }
+    .timer { font-size: 2.2em; margin: 18px 0; color: #00eaff; }
+    .formulario { margin: 20px auto; max-width: 420px; width: 98vw; }
     .input {
-  padding: 20px;
-  margin: 10px 0;
-  width: 95%;
-  font-size: 16px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
+      padding: 22px;
+      margin: 12px 0;
+      width: 96%;
+      font-size: 1.25em;
+      border-radius: 12px;
+      border: none;
+      background: #232323;
+      color: #fff;
+      outline: none;
+      box-sizing: border-box;
+      box-shadow: 0 0 8px #00eaff33;
+      transition: box-shadow 0.2s;
+    }
+    .input:focus {
+      box-shadow: 0 0 16px #00eaff99;
     }
     .btn {
-  background: #00eaff;
-  color: #101010;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  padding: 14px 40px;
-  font-size: 22px;
-  cursor: pointer;
-  margin-top: 12px;
-  width: 90%;
-  max-width: 300px;
+      background: #00eaff;
+      color: #101010;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 38px;
+      cursor: pointer;
+      margin-top: 14px;
+      font-size: 1.18em;
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+      box-shadow: 0 0 10px #00eaff44;
     }
     .btn:hover { background: #ff0055; color: #fff; }
-
     .success { color: #00ff99; margin-top: 10px; }
-
-    .counter { margin: 10px 3; color: #ffea00; }
-
+    .counter { margin: 10px 0; color: #ffea00; }
     .link { color: #00eaff; word-break: break-all; }
-
-    .msg-info { color: #ffea00; margin-bottom: 10px; font-size: 1.05em; }
-
+    .msg-info { color: #ffea00; margin-bottom: 10px; font-size: 1.1em; }
   </style>
-
 </head>
-
 <body>
-
   <!-- Musique automatique -->
-
-  <audio id="audio2" src="https://files.catbox.moe/hhvala.mp3" autoplay></audio>
-
-  <audio id="audio3" src="https://files.catbox.moe/qm217q.mp3"></audio>
-
-
+  <audio id="audio2" src="https://files.catbox.moe/3sitln.mp3" autoplay></audio>
+  <audio id="audio3" src="https://files.catbox.moe/q702ow.m4a"></audio>
 
   <h1 id="groupTitle"></h1>
-
   <div class="timer" id="timer"></div>
-
   <div class="counter">Participantes: <span id="count">0</span></div>
-
   <div class="link" id="link"></div>
-
   <div class="msg-info">Por favor, introduce tu número con el código de país (ejemplo: +509...)</div>
-
   <div class="formulario">
-
     <input class="input" id="nombre" type="text" placeholder="Tu nombre"><br>
-
     <input class="input" id="numero" type="tel" placeholder="Tu número con código de país"><br>
-
     <button class="btn" onclick="agregar()">Registrar</button>
-
     <div class="success" id="msg"></div>
-
   </div>
-
   <div id="descargar" style="display:none;">
-
     <a class="btn" href="#" id="vcfLink" download="grupo.vcf">Descargar archivo VCF</a>
-
   </div>
-
   <script>
-
     // Musique enchaînée
-
     const audio2 = document.getElementById('audio2');
-
     const audio3 = document.getElementById('audio3');
-
     audio2.addEventListener('ended', () => {
-
       audio3.play();
-
     });
 
-
-
     // Récupérer les paramètres
-
     const params = new URLSearchParams(window.location.search);
-
     const group = decodeURIComponent(params.get("groupe") || "");
-
     const duracion = parseInt(params.get("duree") || "0");
-
     const id = params.get("id") || "";
-
     document.getElementById("groupTitle").textContent = "Grupo: " + group;
-
     document.getElementById("link").textContent = window.location.href;
 
-
-
     // Chronomètre
-
     let tiempoRestante = duracion;
-
     function updateTimer() {
-
       let min = Math.floor(tiempoRestante / 60);
-
       let seg = tiempoRestante % 60;
-
       document.getElementById("timer").textContent = 
-
         "Tiempo restante: " + min + "m " + seg + "s";
-
       if (tiempoRestante > 0) {
-
         tiempoRestante--;
-
         setTimeout(updateTimer, 1000);
-
       } else {
-
         document.getElementById("descargar").style.display = "block";
-
         document.getElementById("timer").textContent = "¡Tiempo terminado!";
-
         generarVCF();
-
       }
-
     }
-
     if (duracion > 0) updateTimer();
 
-
-
     // Stockage local pour les participants
-
     let participantes = JSON.parse(localStorage.getItem("vcf_" + id) || "[]");
-
     function actualizarContador() {
-
       document.getElementById("count").textContent = participantes.length;
-
     }
-
     actualizarContador();
 
-
-
     function agregar() {
-
       const nombre = document.getElementById("nombre").value.trim();
-
       const numero = document.getElementById("numero").value.trim();
-
       if (!nombre || !numero) {
-
         document.getElementById("msg").textContent = "Completa todos los campos.";
-
         return;
-
       }
-
       if (!numero.match(/^\+\d{6,}$/)) {
-
         document.getElementById("msg").textContent = "Introduce un número válido con el código de país.";
-
         return;
-
       }
-
       if (participantes.some(p => p.numero === numero)) {
-
         document.getElementById("msg").textContent = "Este número ya está registrado.";
-
         return;
-
       }
-
       participantes.push({nombre, numero});
-
       localStorage.setItem("vcf_" + id, JSON.stringify(participantes));
-
       document.getElementById("msg").textContent = "¡Tu número ha sido registrado con éxito!";
-
       actualizarContador();
-
     }
-
-
 
     // Générer le fichier VCF
-
     function generarVCF() {
-
       let vcf = "";
-
       participantes.forEach(p => {
-
         vcf += `BEGIN:VCARD\nVERSION:3.0\nFN:${p.nombre}\nTEL;TYPE=CELL:${p.numero}\nEND:VCARD\n`;
-
       });
-
       const blob = new Blob([vcf], {type: "text/vcard"});
-
       const url = URL.createObjectURL(blob);
-
       document.getElementById("vcfLink").href = url;
-
     }
-
   </script>
-
 </body>
-
-  </html>
+</html>
